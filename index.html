@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>14 Day Execution</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --g1: #0a0f0d;
+    --teal: #2dd4a0;
+    --teal2: #14b87a;
+    --teal-dim: rgba(45,212,160,0.10);
+    --teal-glow: rgba(45,212,160,0.25);
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-border-bright: rgba(45,212,160,0.3);
+    --text: #e8f5f0;
+    --muted: rgba(232,245,240,0.42);
+    --done: rgba(232,245,240,0.18);
+    --danger: #ff5f57;
+    --amber: #f59e0b;
+    --red-pri: #ef4444;
+}
+
+html { height: 100%; }
+
+body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--g1);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 20px 80px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(110px);
+    pointer-events: none;
+    z-index: 0;
+}
+body::before {
+    width: 560px; height: 560px;
+    background: radial-gradient(circle, rgba(45,212,160,0.16) 0%, transparent 70%);
+    top: -160px; right: -180px;
+    animation: drift1 13s ease-in-out infinite alternate;
+}
+body::after {
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(20,184,122,0.11) 0%, transparent 70%);
+    bottom: -120px; left: -160px;
+    animation: drift2 16s ease-in-out infinite alternate;
+}
+@keyframes drift1 {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(-40px,60px) scale(1.1); }
+}
+@keyframes drift2 {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(50px,-40px) scale(1.08); }
+}
+
+.container { width: 100%; max-width: 680px; position: relative; z-index: 1; }
+
+/* HEADER */
+.header { margin-bottom: 30px; animation: fadeUp 0.5s ease both; }
+h1 {
+    font-size: 36px; font-weight: 600; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #e8f5f0 20%, var(--teal) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.subtitle { color: var(--muted); font-size: 14px; margin-top: 5px; }
+
+@keyframes fadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* TAB BAR */
+.tab-bar {
+    display: flex; background: var(--glass); border-radius: 16px; padding: 5px;
+    margin-bottom: 24px; border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    animation: fadeUp 0.5s 0.06s ease both;
+}
+.tab-btn {
+    flex: 1; padding: 11px; border: none; border-radius: 12px; background: transparent;
+    color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer;
+    font-family: inherit; transition: all 0.28s ease;
+}
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--teal2), var(--teal));
+    color: #071210; font-weight: 600; box-shadow: 0 4px 18px var(--teal-glow);
+}
+
+/* PAGES — slide transition */
+.pages-wrap {
+    position: relative; overflow: hidden;
+}
+.page {
+    display: block;
+    position: absolute; top: 0; left: 0; width: 100%;
+    opacity: 0; pointer-events: none;
+    transform: translateX(40px);
+    transition: opacity 0.32s ease, transform 0.32s ease;
+}
+.page.active {
+    opacity: 1; pointer-events: all;
+    transform: translateX(0);
+    position: relative;
+}
+.page.slide-out-left  { transform: translateX(-40px); opacity: 0; }
+.page.slide-out-right { transform: translateX(40px);  opacity: 0; }
+
+/* CARD */
+.card {
+    background: var(--glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border-radius: 24px; padding: 24px; border: 1px solid var(--glass-border);
+    margin-bottom: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    border-color: rgba(45,212,160,0.14);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.38), 0 0 0 1px rgba(45,212,160,0.07), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* ── SWIPE CAROUSEL ── */
+.carousel-card { padding: 0; overflow: hidden; cursor: grab; user-select: none; }
+.carousel-card:active { cursor: grabbing; }
+.carousel-track {
+    display: flex;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
+}
+.carousel-slide {
+    min-width: 100%; padding: 20px;
+    display: flex; flex-direction: column; justify-content: center; align-items: stretch;
+}
+@media (min-width: 420px) { .carousel-slide { padding: 24px 28px; } }
+
+/* RING SLIDE */
+.ring-slide-inner {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; width: 100%;
+}
+.carousel-dots { display: flex; justify-content: center; gap: 6px; padding: 0 0 14px; }
+.c-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    transition: all 0.3s ease; cursor: pointer;
+}
+.c-dot.active { background: var(--teal); width: 18px; border-radius: 3px; }
+
+/* RING SLIDE */
+.ring-wrap { position: relative; flex-shrink: 0; width: 148px; height: 148px; }
+.ring-wrap svg { transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; }
+.ring-fill {
+    fill: none; stroke: url(#ringGrad); stroke-width: 10; stroke-linecap: round;
+    stroke-dasharray: 364; stroke-dashoffset: 364;
+    transition: stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1);
+}
+.ring-pct {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-family: 'DM Mono', monospace;
+}
+.ring-num { font-size: 32px; font-weight: 500; color: var(--teal); line-height: 1; }
+.ring-label { font-size: 11px; color: var(--muted); margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+.ring-meta { min-width: 0; text-align: center; }
+.ring-meta-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.ring-meta-sub { font-size: 13px; color: var(--muted); line-height: 2; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.ring-meta-sub .hl { color: var(--teal); }
+
+/* LINE GRAPH SLIDE */
+.line-slide-inner { display: flex; flex-direction: column; gap: 14px; width: 100%; align-self: stretch; flex: 1; }
+.line-slide-header { display: flex; flex-direction: column; gap: 3px; }
+.line-slide-title { font-size: 16px; font-weight: 600; }
+.line-slide-sub { font-size: 12px; color: var(--muted); }
+.line-graph-wrap { flex: 1; width: 100%; min-height: 160px; position: relative; }
+.line-graph-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+/* ── COMPLETION GRAPH ── */
+.graph-title {
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 2px; color: var(--teal);
+    margin-bottom: 16px; opacity: 0.75;
+}
+.graph-bars {
+    display: flex; gap: 4px; align-items: flex-end; height: 60px;
+}
+.graph-bar-wrap {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%;
+    min-width: 0;
+}
+.graph-bar-bg {
+    flex: 1; width: 100%; background: rgba(255,255,255,0.05);
+    border-radius: 4px; overflow: hidden; position: relative;
+}
+.graph-bar-fill {
+    position: absolute; bottom: 0; left: 0; right: 0; border-radius: 4px;
+    transition: height 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.graph-bar-fill.full  { background: linear-gradient(to top, var(--teal2), var(--teal)); }
+.graph-bar-fill.half  { background: rgba(45,212,160,0.45); }
+.graph-bar-fill.none  { height: 0 !important; }
+.graph-bar-label {
+    font-family: 'DM Mono', monospace; font-size: 8px;
+    color: var(--muted); letter-spacing: 0; line-height: 1;
+    overflow: hidden; text-overflow: clip; white-space: nowrap;
+}
+
+/* WEEK LABEL */
+.week-title {
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 2.5px; color: var(--teal);
+    margin-bottom: 18px; opacity: 0.75;
+}
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); padding: 0 6px 14px; text-align: center; font-weight: 500;
+}
+th:first-child { text-align: left; padding-left: 0; width: 44%; }
+th:not(:first-child) { width: 18%; }
+td { padding: 12px 6px; text-align: center; font-size: 14px; }
+td:first-child {
+    text-align: left; font-weight: 500; padding-left: 0;
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+tr:not(:last-child) td { border-bottom: 1px solid var(--glass-border); }
+tr.perfect td:first-child { color: var(--teal); }
+tr.perfect { background: var(--teal-dim); }
+
+/* NOTE ICON in table */
+.note-btn {
+    background: none; border: none; cursor: pointer; padding: 2px 6px;
+    color: var(--muted); font-size: 14px; opacity: 0.4;
+    transition: opacity 0.2s, color 0.2s;
+    line-height: 1;
+}
+.note-btn:hover { opacity: 1; }
+.note-btn.has-note { opacity: 0.85; color: var(--teal); }
+
+/* NOTE MODAL */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 100; display: flex; align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+    background: #111a15; border: 1px solid rgba(45,212,160,0.2);
+    border-radius: 24px; padding: 28px; width: 100%; max-width: 420px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    transform: translateY(16px); transition: transform 0.3s ease;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close {
+    background: none; border: none; color: var(--muted); font-size: 22px;
+    cursor: pointer; line-height: 1; padding: 0 4px; transition: color 0.2s;
+}
+.modal-close:hover { color: var(--text); }
+.note-textarea {
+    width: 100%; min-height: 100px; padding: 14px 16px;
+    border-radius: 14px; border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.04); color: var(--text);
+    font-size: 15px; font-family: inherit; outline: none; resize: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+}
+.note-textarea:focus { border-color: var(--glass-border-bright); }
+.note-textarea::placeholder { color: var(--muted); }
+.modal-save {
+    margin-top: 12px; width: 100%; padding: 13px;
+    border-radius: 14px; border: none;
+    background: linear-gradient(135deg, var(--teal2), var(--teal));
+    color: #071210; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 16px var(--teal-glow); transition: all 0.2s;
+}
+.modal-save:active { transform: scale(0.98); }
+
+/* CHECKBOX */
+.cb-wrap { display: flex; align-items: center; justify-content: center; }
+input[type="checkbox"] {
+    appearance: none; -webkit-appearance: none;
+    width: 22px; height: 22px; border-radius: 7px;
+    border: 1.5px solid rgba(255,255,255,0.13);
+    background: rgba(255,255,255,0.04);
+    cursor: pointer; position: relative;
+    transition: all 0.2s ease; flex-shrink: 0;
+}
+input[type="checkbox"]:checked {
+    background: linear-gradient(135deg, var(--teal2), var(--teal));
+    border-color: transparent; box-shadow: 0 0 10px var(--teal-glow);
+    animation: pop 0.2s ease;
+}
+input[type="checkbox"]:checked::after {
+    content: ''; position: absolute; left: 6px; top: 3px;
+    width: 6px; height: 10px; border: 2px solid #071210;
+    border-top: none; border-left: none; transform: rotate(45deg);
+}
+@keyframes pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+/* STATS ROW */
+.stats-row {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; flex-wrap: wrap;
+    font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace;
+}
+.stats-row .hl { color: var(--teal); }
+
+/* RESET BTN */
+button.primary {
+    width: 100%; padding: 15px; border-radius: 16px;
+    border: 1px solid var(--glass-border); background: var(--glass);
+    color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer;
+    font-family: inherit; backdrop-filter: blur(20px);
+    transition: all 0.25s ease; margin-top: 2px;
+}
+button.primary:hover { border-color: rgba(255,95,87,0.3); color: var(--danger); background: rgba(255,95,87,0.05); }
+button.primary:active { transform: scale(0.98); }
+
+/* ── SUMMARY SCREEN ── */
+.summary-screen {
+    display: none; flex-direction: column; align-items: center;
+    text-align: center; padding: 20px 0;
+}
+.summary-screen.visible { display: flex; }
+.summary-trophy { font-size: 56px; margin-bottom: 16px; animation: trophyIn 0.6s ease both; }
+@keyframes trophyIn {
+    from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.summary-title { font-size: 26px; font-weight: 600; margin-bottom: 8px; }
+.summary-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+.summary-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    width: 100%; margin-bottom: 24px;
+}
+.summary-stat {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 18px; padding: 16px 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    min-width: 0;
+}
+.summary-stat-num {
+    font-size: clamp(20px, 6vw, 28px); font-weight: 600; color: var(--teal);
+    font-family: 'DM Mono', monospace; line-height: 1;
+}
+.summary-stat-label { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.3; }
+
+/* TO-DO */
+.todo-input-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.todo-input {
+    flex: 1; padding: 14px 18px; border-radius: 16px;
+    border: 1px solid var(--glass-border); background: var(--glass);
+    color: var(--text); font-size: 15px; font-family: inherit; outline: none;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+.todo-input::placeholder { color: var(--muted); }
+.todo-input:focus { border-color: var(--glass-border-bright); box-shadow: 0 0 0 3px rgba(45,212,160,0.07); }
+.add-btn {
+    padding: 14px 22px; border-radius: 16px; border: none;
+    background: linear-gradient(135deg, var(--teal2), var(--teal));
+    color: #071210; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; box-shadow: 0 4px 16px var(--teal-glow);
+    transition: all 0.2s ease; white-space: nowrap;
+}
+.add-btn:hover { box-shadow: 0 6px 24px var(--teal-glow); transform: translateY(-1px); }
+.add-btn:active { transform: scale(0.97) translateY(0); }
+
+/* PRIORITY SELECTOR */
+.priority-row {
+    display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.pri-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--glass-border); background: var(--glass);
+    color: var(--muted); font-size: 12px; font-weight: 500;
+    cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.pri-btn .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pri-btn.active { border-color: transparent; color: #071210; font-weight: 600; }
+.pri-btn[data-p="none"]   .dot { background: var(--muted); }
+.pri-btn[data-p="medium"] .dot { background: var(--amber); }
+.pri-btn[data-p="high"]   .dot { background: var(--red-pri); }
+.pri-btn[data-p="none"].active   { background: rgba(255,255,255,0.15); color: var(--text); }
+.pri-btn[data-p="medium"].active { background: var(--amber); }
+.pri-btn[data-p="high"].active   { background: var(--red-pri); }
+
+/* FILTER ROW */
+.filter-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+}
+.filter-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); font-family: 'DM Mono', monospace; white-space: nowrap;
+}
+.filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+    padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--glass-border); background: var(--glass);
+    color: var(--muted); font-size: 12px; font-weight: 500;
+    cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.filter-btn.active {
+    background: var(--teal-dim); border-color: rgba(45,212,160,0.3);
+    color: var(--teal);
+}
+.todo-list { display: flex; flex-direction: column; }
+
+/* swipe-to-delete wrapper */
+.todo-item-wrap {
+    position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--glass-border);
+}
+.todo-item-wrap:last-child { border-bottom: none; }
+.todo-swipe-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 30%, rgba(255,95,87,0.25) 100%);
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 18px; pointer-events: none; opacity: 0; transition: opacity 0.12s;
+}
+.todo-swipe-bg span { font-size: 16px; color: var(--danger); }
+.todo-item-wrap.revealing .todo-swipe-bg { opacity: 1; }
+
+.todo-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 0;
+    transition: transform 0.08s linear, opacity 0.25s ease;
+    animation: slideIn 0.28s ease both;
+    background: transparent;
+    will-change: transform;
+}
+@keyframes slideIn {
+    from { opacity:0; transform:translateX(-8px); }
+    to   { opacity:1; transform:translateX(0); }
+}
+.pri-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pri-dot[data-p="none"]   { background: transparent; }
+.pri-dot[data-p="medium"] { background: var(--amber); box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+.pri-dot[data-p="high"]   { background: var(--red-pri); box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+.todo-label {
+    flex: 1; font-size: 15px; transition: all 0.3s ease; color: var(--text);
+    word-break: break-word; overflow-wrap: anywhere; min-width: 0;
+}
+.todo-item.done .todo-label { text-decoration: line-through; color: var(--done); }
+.todo-delete {
+    background: none; border: none; color: var(--muted); font-size: 20px;
+    cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.28;
+    transition: opacity 0.2s, color 0.2s;
+}
+.todo-delete:hover { opacity: 1; color: var(--danger); }
+.todo-empty {
+    text-align: center; color: var(--muted); font-size: 14px;
+    padding: 28px 0; opacity: 0.55;
+}
+
+/* FOOTER */
+.footer-row {
+    display: flex; align-items: center; justify-content: space-between; padding: 14px 24px;
+}
+.todo-stats-text { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
+.todo-stats-text .hl { color: var(--teal); }
+.reset-link {
+    background: none; border: none; color: var(--muted); font-size: 12px;
+    cursor: pointer; font-family: inherit; padding: 0; transition: color 0.2s;
+}
+.reset-link:hover { color: var(--danger); }
+
+/* BADGE */
+.badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--teal-dim); border: 1px solid rgba(45,212,160,0.15);
+    border-radius: 999px; padding: 4px 12px; font-size: 11px; color: var(--teal);
+    font-family: 'DM Mono', monospace; letter-spacing: 0.5px; margin-bottom: 18px; opacity: 0.8;
+}
+.badge-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--teal);
+    animation: pulse 2s ease infinite;
+}
+@keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.3; transform:scale(0.7); }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>14 Day Execution</h1>
+        <div class="subtitle">Consistency compounds.</div>
+    </div>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('tracker', this)">Tracker</button>
+        <button class="tab-btn" onclick="switchTab('todo', this)">To-Do</button>
+    </div>
+
+    <div class="pages-wrap">
+
+    <!-- ══ TRACKER PAGE ══ -->
+    <div class="page active" id="page-tracker">
+
+        <!-- SWIPE CAROUSEL: ring + line graph -->
+        <div class="card carousel-card" id="carousel-card">
+            <div class="carousel-track" id="carousel-track">
+
+                <!-- SLIDE 1: Progress Ring -->
+                <div class="carousel-slide">
+                    <div class="ring-slide-inner">
+                        <div class="ring-wrap">
+                            <svg width="148" height="148" viewBox="0 0 148 148">
+                                <defs>
+                                    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#14b87a"/>
+                                        <stop offset="100%" stop-color="#2dd4a0"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="ring-bg" cx="74" cy="74" r="58"/>
+                                <circle class="ring-fill" id="ring-fill" cx="74" cy="74" r="58"/>
+                            </svg>
+                            <div class="ring-pct">
+                                <div class="ring-num" id="ring-pct">0%</div>
+                                <div class="ring-label">done</div>
+                            </div>
+                        </div>
+                        <div class="ring-meta">
+                            <div class="ring-meta-title">Overall Progress</div>
+                            <div class="ring-meta-sub" id="ring-detail">
+                                <span><span class="hl">0</span>/28 habits</span>
+                                <span>Streak: <span class="hl">0</span> days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 2: Line Graph -->
+                <div class="carousel-slide">
+                    <div class="line-slide-inner">
+                        <div class="line-slide-header">
+                            <div class="line-slide-title">Cumulative Habits</div>
+                            <div class="line-slide-sub">Running total over 14 days</div>
+                        </div>
+                        <div class="line-graph-wrap">
+                            <svg id="line-svg" viewBox="0 0 400 160" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="rgba(45,212,160,0.28)"/>
+                                        <stop offset="100%" stop-color="rgba(45,212,160,0)"/>
+                                    </linearGradient>
+                                    <linearGradient id="lineStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#14b87a"/>
+                                        <stop offset="100%" stop-color="#2dd4a0"/>
+                                    </linearGradient>
+                                </defs>
+                                <!-- grid lines -->
+                                <line x1="0" y1="0"   x2="400" y2="0"   stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                                <line x1="0" y1="53"  x2="400" y2="53"  stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                                <line x1="0" y1="106" x2="400" y2="106" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                                <line x1="0" y1="156" x2="400" y2="156" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                                <!-- filled area -->
+                                <path id="line-area" fill="url(#lineGrad)" d=""/>
+                                <!-- line -->
+                                <path id="line-path" fill="none" stroke="url(#lineStroke)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d=""/>
+                                <!-- dots group -->
+                                <g id="line-dots"></g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- DOTS -->
+            <div class="carousel-dots">
+                <div class="c-dot active" onclick="goSlide(0)"></div>
+                <div class="c-dot" onclick="goSlide(1)"></div>
+            </div>
+        </div>
+
+        <!-- COMPLETION GRAPH -->
+        <div class="card">
+            <div class="graph-title">Daily Completion</div>
+            <div class="graph-bars" id="graph-bars"></div>
+        </div>
+
+        <!-- WEEK 1 -->
+        <div class="card">
+            <div class="week-title">Week 01</div>
+            <table>
+                <thead><tr><th>Day</th><th>7 AM</th><th>Deep Work</th><th>Note</th></tr></thead>
+                <tbody id="week1-body"></tbody>
+            </table>
+        </div>
+
+        <!-- WEEK 2 -->
+        <div class="card">
+            <div class="week-title">Week 02</div>
+            <table>
+                <thead><tr><th>Day</th><th>7 AM</th><th>Deep Work</th><th>Note</th></tr></thead>
+                <tbody id="week2-body"></tbody>
+            </table>
+        </div>
+
+        <!-- SUMMARY SCREEN (hidden until complete) -->
+        <div class="card" id="summary-card" style="display:none;">
+            <div class="summary-screen visible" id="summary-screen">
+                <div class="summary-trophy">🏆</div>
+                <div class="summary-title">14 Days Done.</div>
+                <div class="summary-sub">You showed up every day. That's the whole game.</div>
+                <div class="summary-stats">
+                    <div class="summary-stat">
+                        <div class="summary-stat-num" id="sum-completed">—</div>
+                        <div class="summary-stat-label">Habits Completed</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-num" id="sum-streak">—</div>
+                        <div class="summary-stat-label">Best Streak</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-num" id="sum-perfect">—</div>
+                        <div class="summary-stat-label">Perfect Days</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-num">14</div>
+                        <div class="summary-stat-label">Days Executed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 18px 24px;">
+            <div class="stats-row">
+                <div id="progress">0/28 completed</div>
+                <div id="streak">Streak: 0 days</div>
+            </div>
+        </div>
+
+        <button class="primary" onclick="resetChecklist()">Reset Tracker</button>
+    </div>
+
+    <!-- ══ TO-DO PAGE ══ -->
+    <div class="page" id="page-todo">
+
+        <div class="badge"><div class="badge-dot"></div>resets at midnight</div>
+
+        <div class="todo-input-row">
+            <input class="todo-input" id="todo-input" type="text" placeholder="Add a task…" maxlength="120"/>
+            <button class="add-btn" onclick="addTodo()">Add</button>
+        </div>
+
+        <!-- PRIORITY PICKER -->
+        <div class="priority-row">
+            <button class="pri-btn active" data-p="none"   onclick="setPri('none',this)">
+                <span class="dot"></span> Normal
+            </button>
+            <button class="pri-btn" data-p="medium" onclick="setPri('medium',this)">
+                <span class="dot"></span> Medium
+            </button>
+            <button class="pri-btn" data-p="high"   onclick="setPri('high',this)">
+                <span class="dot"></span> High
+            </button>
+        </div>
+
+        <!-- FILTER ROW -->
+        <div class="filter-row">
+            <span class="filter-label">Filter</span>
+            <div class="filter-btns">
+                <button class="filter-btn active" data-f="all"    onclick="setFilter('all',this)">All</button>
+                <button class="filter-btn"         data-f="high"   onclick="setFilter('high',this)">High → Low</button>
+                <button class="filter-btn"         data-f="low"    onclick="setFilter('low',this)">Low → High</button>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 8px 24px;">
+            <div class="todo-list" id="todo-list">
+                <div class="todo-empty">No tasks yet. Add one above.</div>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <div class="footer-row">
+                <div class="todo-stats-text" id="todo-stats"></div>
+                <button class="reset-link" onclick="resetTodo()">Reset all</button>
+            </div>
+        </div>
+    </div><!-- end todo page -->
+    </div><!-- end pages-wrap -->
+</div><!-- end container -->
+<div class="modal-overlay" id="note-modal" onclick="closeNoteModal(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-day-label">Day 01 — Note</div>
+            <button class="modal-close" onclick="closeNoteModalDirect()">×</button>
+        </div>
+        <textarea class="note-textarea" id="note-textarea" placeholder="What did you execute today?…" maxlength="400"></textarea>
+        <button class="modal-save" onclick="saveNote()">Save Note</button>
+    </div>
+</div>
+
+<script>
+/* ── TABS with slide transition ── */
+const tabOrder = ['tracker', 'todo'];
+let currentTab = 'tracker';
+
+function switchTab(tab, btn) {
+    if (tab === currentTab) return;
+    const fromIdx = tabOrder.indexOf(currentTab);
+    const toIdx   = tabOrder.indexOf(tab);
+    const goRight = toIdx > fromIdx;
+
+    const fromPage = document.getElementById('page-' + currentTab);
+    const toPage   = document.getElementById('page-' + tab);
+
+    // prep incoming page off-screen
+    toPage.style.transition = 'none';
+    toPage.style.transform  = goRight ? 'translateX(40px)' : 'translateX(-40px)';
+    toPage.style.opacity    = '0';
+    toPage.style.position   = 'absolute';
+    toPage.style.pointerEvents = 'none';
+    toPage.classList.add('active');
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            toPage.style.transition   = 'opacity 0.32s ease, transform 0.32s ease';
+            toPage.style.transform    = 'translateX(0)';
+            toPage.style.opacity      = '1';
+            toPage.style.position     = '';
+            toPage.style.pointerEvents = '';
+
+            fromPage.style.transition = 'opacity 0.32s ease, transform 0.32s ease';
+            fromPage.style.transform  = goRight ? 'translateX(-40px)' : 'translateX(40px)';
+            fromPage.style.opacity    = '0';
+
+            setTimeout(() => {
+                fromPage.classList.remove('active');
+                fromPage.style.transform = '';
+                fromPage.style.opacity   = '';
+                fromPage.style.transition = '';
+                toPage.style.transition  = '';
+            }, 330);
+        });
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = tab;
+}
+
+/* ── TRACKER ── */
+const TRACKER_KEY = "executionChecklistFinal";
+const NOTES_KEY   = "executionNotes";
+let trackerData = JSON.parse(localStorage.getItem(TRACKER_KEY)) || {};
+let notesData   = JSON.parse(localStorage.getItem(NOTES_KEY))   || {};
+
+// animated number counter
+function animateCount(el, to, duration = 500) {
+    const from = parseInt(el.dataset.val || '0', 10);
+    if (from === to) return;
+    el.dataset.val = to;
+    const start = performance.now();
+    function step(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3); // ease-out cubic
+        el.textContent = Math.round(from + (to - from) * ease);
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = to;
+    }
+    requestAnimationFrame(step);
+}
+
+function saveTracker() {
+    localStorage.setItem(TRACKER_KEY, JSON.stringify(trackerData));
+    updateAll();
+}
+
+function updateAll() {
+    let completed = 0, perfectDays = 0;
+    for (let i = 1; i <= 14; i++) {
+        const a = trackerData[`d${i}-7`], b = trackerData[`d${i}-dw`];
+        if (a) completed++;
+        if (b) completed++;
+        if (a && b) perfectDays++;
+    }
+    let streak = 0;
+    for (let i = 1; i <= 14; i++) {
+        if (trackerData[`d${i}-7`] && trackerData[`d${i}-dw`]) streak++;
+        else break;
+    }
+
+    // Stats row
+    const progComplEl = document.getElementById('prog-completed');
+    const progStreakEl = document.getElementById('prog-streak');
+    if (progComplEl) animateCount(progComplEl, completed);
+    if (progStreakEl) animateCount(progStreakEl, streak);
+    document.getElementById("progress").innerHTML = `<span class="hl"><span id="prog-completed" data-val="${completed}">${completed}</span></span>/28 completed`;
+    document.getElementById("streak").innerHTML   = `Streak: <span class="hl"><span id="prog-streak" data-val="${streak}">${streak}</span></span> days`;
+
+    // Ring
+    const pct = Math.round((completed / 28) * 100);
+    const circumference = 364;
+    const offset = circumference - (pct / 100) * circumference;
+    document.getElementById("ring-fill").style.strokeDashoffset = offset;
+    const ringNumEl = document.getElementById("ring-pct");
+    animateCount(ringNumEl, pct, 700);
+    setTimeout(() => { if (ringNumEl.textContent === String(pct)) ringNumEl.textContent = pct + '%'; }, 710);
+    document.getElementById("ring-detail").innerHTML =
+        `<span><span class="hl"><span id="ring-habits" data-val="${completed}">${completed}</span></span>/28 habits</span><span>Streak: <span class="hl"><span id="ring-streak" data-val="${streak}">${streak}</span></span> days</span>`;
+
+    // Graph
+    renderGraph();
+
+    // Perfect rows
+    for (let i = 1; i <= 14; i++) {
+        const row = document.getElementById(`row-${i}`);
+        if (!row) continue;
+        if (trackerData[`d${i}-7`] && trackerData[`d${i}-dw`]) row.classList.add("perfect");
+        else row.classList.remove("perfect");
+    }
+
+    // Re-render line graph if visible
+    if (currentSlide === 1) renderLineGraph();
+
+    // Summary: show if all 28 checked
+    const summaryCard = document.getElementById('summary-card');
+    if (completed === 28) {
+        summaryCard.style.display = 'block';
+        document.getElementById('sum-completed').textContent = completed;
+        document.getElementById('sum-streak').textContent    = streak;
+        document.getElementById('sum-perfect').textContent   = perfectDays;
+    } else {
+        summaryCard.style.display = 'none';
+    }
+}
+
+function renderGraph() {
+    const container = document.getElementById('graph-bars');
+    container.innerHTML = '';
+    for (let i = 1; i <= 14; i++) {
+        const a = trackerData[`d${i}-7`], b = trackerData[`d${i}-dw`];
+        const score = (a ? 1 : 0) + (b ? 1 : 0); // 0, 1, or 2
+        const heightPct = score === 2 ? '100%' : score === 1 ? '55%' : '0%';
+        const cls = score === 2 ? 'full' : score === 1 ? 'half' : 'none';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'graph-bar-wrap';
+        wrap.innerHTML = `
+            <div class="graph-bar-bg">
+                <div class="graph-bar-fill ${cls}" style="height:${heightPct}"></div>
+            </div>
+            <div class="graph-bar-label">${i}</div>
+        `;
+        container.appendChild(wrap);
+    }
+}
+
+/* ── LINE GRAPH ── */
+function renderLineGraph() {
+    const svgW = 400, svgH = 160, pad = 12;
+    const innerW = svgW - pad * 2;
+    const innerH = svgH - pad * 2;
+
+    let cumulative = 0;
+    const points = [];
+    for (let i = 1; i <= 14; i++) {
+        const a = trackerData[`d${i}-7`], b = trackerData[`d${i}-dw`];
+        cumulative += (a ? 1 : 0) + (b ? 1 : 0);
+        points.push(cumulative);
+    }
+
+    const maxVal = 28;
+    const xStep = innerW / 13;
+
+    const coords = points.map((v, idx) => ({
+        x: pad + idx * xStep,
+        y: pad + innerH - (v / maxVal) * innerH
+    }));
+
+    const lastIdx = points.reduce((acc, v, i) => v > 0 ? i : acc, 0);
+    const drawn = coords.slice(0, lastIdx + 1);
+
+    if (drawn.length < 1 || points[0] === 0) {
+        document.getElementById('line-path').setAttribute('d', '');
+        document.getElementById('line-area').setAttribute('d', '');
+        document.getElementById('line-dots').innerHTML = '';
+        return;
+    }
+
+    let pathD = `M ${drawn[0].x} ${drawn[0].y}`;
+    for (let i = 1; i < drawn.length; i++) {
+        const prev = drawn[i-1], curr = drawn[i];
+        const cpx = (prev.x + curr.x) / 2;
+        pathD += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+    }
+    document.getElementById('line-path').setAttribute('d', pathD);
+
+    const last = drawn[drawn.length - 1];
+    const areaD = pathD + ` L ${last.x} ${svgH} L ${drawn[0].x} ${svgH} Z`;
+    document.getElementById('line-area').setAttribute('d', areaD);
+
+    const dotsG = document.getElementById('line-dots');
+    dotsG.innerHTML = '';
+    const lp = drawn[drawn.length - 1];
+    dotsG.innerHTML = `
+        <circle cx="${lp.x}" cy="${lp.y}" r="6" fill="#0a0f0d" stroke="#2dd4a0" stroke-width="2.5"/>
+        <circle cx="${lp.x}" cy="${lp.y}" r="3" fill="#2dd4a0"/>
+    `;
+}
+
+/* ── CAROUSEL ── */
+let currentSlide = 0;
+const totalSlides = 2;
+
+function goSlide(idx) {
+    currentSlide = idx;
+    document.getElementById('carousel-track').style.transform = `translateX(-${idx * 100}%)`;
+    document.querySelectorAll('.c-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    if (idx === 1) renderLineGraph();
+}
+
+// Touch / mouse swipe
+(function() {
+    const card = document.getElementById('carousel-card');
+    let startX = 0, dragging = false, moved = 0;
+
+    function onStart(x) { startX = x; dragging = true; moved = 0; }
+    function onMove(x) {
+        if (!dragging) return;
+        moved = x - startX;
+    }
+    function onEnd() {
+        if (!dragging) return;
+        dragging = false;
+        if (moved < -40 && currentSlide < totalSlides - 1) goSlide(currentSlide + 1);
+        else if (moved > 40 && currentSlide > 0) goSlide(currentSlide - 1);
+    }
+
+    card.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
+    card.addEventListener('touchmove',  e => onMove(e.touches[0].clientX),  { passive: true });
+    card.addEventListener('touchend',   onEnd);
+    card.addEventListener('mousedown',  e => onStart(e.clientX));
+    card.addEventListener('mousemove',  e => onMove(e.clientX));
+    card.addEventListener('mouseup',    onEnd);
+    card.addEventListener('mouseleave', onEnd);
+})();
+
+function generateRows(start, end, containerId) {
+    const container = document.getElementById(containerId);
+    for (let i = start; i <= end; i++) {
+        const row = document.createElement("tr");
+        row.id = `row-${i}`;
+        const hasNote = !!notesData[`d${i}`];
+        row.innerHTML = `
+            <td>Day ${String(i).padStart(2,'0')}</td>
+            <td><div class="cb-wrap"><input type="checkbox" id="d${i}-7"></div></td>
+            <td><div class="cb-wrap"><input type="checkbox" id="d${i}-dw"></div></td>
+            <td><button class="note-btn ${hasNote ? 'has-note' : ''}" id="note-btn-${i}" onclick="openNoteModal(${i})">✎</button></td>
+        `;
+        container.appendChild(row);
+    }
+}
+
+generateRows(1, 7, "week1-body");
+generateRows(8, 14, "week2-body");
+
+document.querySelectorAll("input[type='checkbox'][id^='d']").forEach(cb => {
+    if (trackerData[cb.id]) cb.checked = true;
+    cb.addEventListener("change", () => {
+        trackerData[cb.id] = cb.checked;
+        saveTracker();
+    });
+});
+
+function resetChecklist() {
+    localStorage.removeItem(TRACKER_KEY);
+    localStorage.removeItem(NOTES_KEY);
+    location.reload();
+}
+
+updateAll();
+
+/* ── NOTES MODAL ── */
+let activeNoteDay = null;
+
+function openNoteModal(day) {
+    activeNoteDay = day;
+    document.getElementById('modal-day-label').textContent = `Day ${String(day).padStart(2,'0')} — Note`;
+    document.getElementById('note-textarea').value = notesData[`d${day}`] || '';
+    document.getElementById('note-modal').classList.add('open');
+    setTimeout(() => document.getElementById('note-textarea').focus(), 200);
+}
+
+function closeNoteModal(e) {
+    if (e.target === document.getElementById('note-modal')) closeNoteModalDirect();
+}
+function closeNoteModalDirect() {
+    document.getElementById('note-modal').classList.remove('open');
+    activeNoteDay = null;
+}
+
+function saveNote() {
+    if (activeNoteDay === null) return;
+    const val = document.getElementById('note-textarea').value.trim();
+    if (val) notesData[`d${activeNoteDay}`] = val;
+    else delete notesData[`d${activeNoteDay}`];
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notesData));
+    // Update note button state
+    const btn = document.getElementById(`note-btn-${activeNoteDay}`);
+    if (btn) btn.classList.toggle('has-note', !!val);
+    closeNoteModalDirect();
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeNoteModalDirect();
+});
+
+/* ── TO-DO ── */
+const TODO_KEY = "todoListData_v2";
+let selectedPriority = 'none';
+let activeFilter = 'all';
+
+function setFilter(f, btn) {
+    activeFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTodos();
+}
+
+function setPri(p, btn) {
+    selectedPriority = p;
+    document.querySelectorAll('.pri-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function todayDateStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function loadTodos() {
+    try {
+        const raw = localStorage.getItem(TODO_KEY);
+        if (!raw) return { date: todayDateStr(), tasks: [] };
+        const parsed = JSON.parse(raw);
+        if (parsed.date !== todayDateStr()) return { date: todayDateStr(), tasks: [] };
+        return parsed;
+    } catch(e) { return { date: todayDateStr(), tasks: [] }; }
+}
+
+let todoData = loadTodos();
+
+function saveTodos() {
+    todoData.date = todayDateStr();
+    localStorage.setItem(TODO_KEY, JSON.stringify(todoData));
+    renderTodos();
+}
+
+function renderTodos() {
+    const list = document.getElementById('todo-list');
+    const statsEl = document.getElementById('todo-stats');
+    list.innerHTML = '';
+
+    const po = {high:0, medium:1, none:2};
+
+    const sorted = [...todoData.tasks].map((t,i) => ({...t, _i:i})).sort((a,b) => {
+        if (a.checked !== b.checked) return a.checked ? 1 : -1;
+        if (activeFilter === 'high') return (po[a.priority]||2) - (po[b.priority]||2);
+        if (activeFilter === 'low')  return (po[b.priority]||2) - (po[a.priority]||2);
+        // 'all' — high→low by default
+        return (po[a.priority]||2) - (po[b.priority]||2);
+    });
+
+    if (sorted.length === 0) {
+        list.innerHTML = '<div class="todo-empty">No tasks yet. Add one above.</div>';
+        statsEl.innerHTML = '';
+        return;
+    }
+
+    const done = todoData.tasks.filter(t => t.checked).length;
+    statsEl.innerHTML = `<span class="hl">${done}</span>/${todoData.tasks.length} done`;
+
+    sorted.forEach(task => {
+        const idx = task._i;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'todo-item-wrap';
+
+        const bg = document.createElement('div');
+        bg.className = 'todo-swipe-bg';
+        bg.innerHTML = '<span>🗑</span>';
+
+        const item = document.createElement('div');
+        item.className = 'todo-item' + (task.checked ? ' done' : '');
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = task.checked;
+        cb.addEventListener('change', () => {
+            todoData.tasks[idx].checked = cb.checked;
+            saveTodos();
+        });
+
+        const dot = document.createElement('span');
+        dot.className = 'pri-dot';
+        dot.dataset.p = task.priority || 'none';
+
+        const label = document.createElement('span');
+        label.className = 'todo-label';
+        label.textContent = task.text;
+
+        const del = document.createElement('button');
+        del.className = 'todo-delete';
+        del.innerHTML = '&times;';
+        del.addEventListener('click', () => {
+            todoData.tasks.splice(idx, 1);
+            saveTodos();
+        });
+
+        item.appendChild(cb);
+        item.appendChild(dot);
+        item.appendChild(label);
+        item.appendChild(del);
+        wrap.appendChild(bg);
+        wrap.appendChild(item);
+        list.appendChild(wrap);
+
+        // swipe to delete
+        let startX = 0, dx = 0, swiping = false;
+        const THRESHOLD = 80;
+
+        function onTouchStart(e) { startX = e.touches[0].clientX; swiping = true; dx = 0; }
+        function onTouchMove(e) {
+            if (!swiping) return;
+            dx = e.touches[0].clientX - startX;
+            if (dx > 0) { dx = 0; return; } // only left swipe
+            item.style.transform = `translateX(${dx}px)`;
+            wrap.classList.toggle('revealing', dx < -20);
+        }
+        function onTouchEnd() {
+            if (!swiping) return; swiping = false;
+            if (dx < -THRESHOLD) {
+                item.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
+                item.style.transform  = 'translateX(-110%)';
+                item.style.opacity    = '0';
+                setTimeout(() => { todoData.tasks.splice(idx, 1); saveTodos(); }, 230);
+            } else {
+                item.style.transition = 'transform 0.25s ease';
+                item.style.transform  = 'translateX(0)';
+                wrap.classList.remove('revealing');
+                setTimeout(() => { item.style.transition = ''; }, 260);
+            }
+        }
+        item.addEventListener('touchstart', onTouchStart, { passive: true });
+        item.addEventListener('touchmove',  onTouchMove,  { passive: true });
+        item.addEventListener('touchend',   onTouchEnd);
+    });
+}
+
+function addTodo() {
+    const input = document.getElementById('todo-input');
+    const text = input.value.trim();
+    if (!text) return;
+    todoData.tasks.push({ text, checked: false, priority: selectedPriority });
+    input.value = '';
+    input.focus();
+    saveTodos();
+}
+
+function resetTodo() {
+    todoData.tasks = [];
+    saveTodos();
+}
+
+document.getElementById('todo-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+});
+
+setInterval(() => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(TODO_KEY) || '{}');
+        if (saved.date && saved.date !== todayDateStr()) {
+            todoData = { date: todayDateStr(), tasks: [] };
+            saveTodos();
+        }
+    } catch(e) {}
+}, 60000);
+
+renderTodos();
+</script>
+</body>
+</html>
